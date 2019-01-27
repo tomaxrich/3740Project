@@ -1,0 +1,66 @@
+#lang racket
+;this is from rosettacode.org
+;it works perfectly, so it will probably be used for demoing
+;or for the test cases that are needed.
+
+;reader
+(require parser-tools/yacc parser-tools/lex
+         (prefix-in ~ parser-tools/lex-sre))
+ 
+(define-tokens value-tokens (NUM))
+;(define-empty-tokens iterative-tokens("for" "endfor" "to" "stepsize")
+;(define-empty-tokens selection-tokens("if" "endif" "then" "else")
+(define-empty-tokens special-tokens (INPUT OUTPUT FOR IF))
+(define-empty-tokens op-tokens (OPEN CLOSE + - * / == <> <= >= < > EOF NEG))
+ 
+(define lex
+  (lexer [(eof) 'EOF]
+         [whitespace (lex input-port)]
+         [(~or "+" "-" "*" "/") (string->symbol lexeme)]
+         [(~or "==" "<>" "<" ">" "<=" ">=") (string->symbol lexeme)]
+         ["if" 'IF]
+         ["for" 'FOR]
+         ["input" 'INPUT]
+         ["output" 'OUPUT]
+         ["I" error]
+         ["J" error]
+         ["(" 'OPEN]
+         [")" 'CLOSE]
+         [(~: (~+ numeric) (~? (~: #\. (~* numeric))))
+          (token-NUM (string->number lexeme))]))
+ 
+(define parse
+  (parser [start E] [end EOF]
+          [tokens value-tokens op-tokens]
+          [error void]
+          [precs (left == <> < > <= >=) (left - +) (left * /) (left NEG) ]
+          [grammar (E [(NUM) $1]
+                      [(E == E) (eq? $1 $3)]
+                      [(E <> E) (not(eq? $1 $3))]
+                      [(E > E) (> $1 $3)]
+                      [(E < E) (< $1 $3)]
+                      [(E <= E) (<= $1 $3)]
+                      [(E >= E) (>= $1 $3)]
+                      [(E + E) (+ $1 $3)]
+                      [(E - E) (- $1 $3)]
+                      [(E * E) (* $1 $3)]
+                      [(E / E) (/ $1 $3)]
+                      [(- E) (prec NEG) (- $2)]
+                      [(OPEN E CLOSE) $2]
+                      )]
+          ))
+ 
+(define (calc str)
+  (define i (open-input-string str))
+  (displayln (parse (lambda() (lex i)))))
+ 
+(define (uofl)
+   (display "UofL>")                 ; print a prompt
+   (let ((expr (read-line)))              ; read an expression, save it in expr
+      (cond ((eq? expr 'exit)        ; user asked to stop?
+             (display "exiting")
+             (newline))
+            (else
+             (calc expr)
+             (newline)
+             (uofl)))))

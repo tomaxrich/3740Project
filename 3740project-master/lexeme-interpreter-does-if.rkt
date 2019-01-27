@@ -1,0 +1,76 @@
+#lang racket
+;code from rosettacode.org
+;this is what we used to base our undersanding of how to aproach the rest of the project
+;we tried to build our own lexer/parser but were not making good progress so made use of the
+;lexer and parser tools through racket.
+
+(require parser-tools/yacc parser-tools/lex
+         (prefix-in ~ parser-tools/lex-sre))
+ 
+(define-tokens value-tokens (NUM))
+(define-empty-tokens op-tokens (OPEN CLOSE + - * / == <> < > <= >= EOF NEG DFINE IF ELSEIF THEN ENDIF))
+ 
+(define lex
+  (lexer [(eof) 'EOF]
+         [whitespace (lex input-port)]
+         [(~or "+" "-" "*" "/") (string->symbol lexeme)]
+         [(~or "==" "<>" "<" ">" "<=" ">=") (string->symbol lexeme)]
+         ["(" 'OPEN]
+         [")" 'CLOSE]
+         ["if" 'IF]
+         ["then" 'THEN]
+         ["endif" 'ENDIF]
+         ["else" 'ELSE]
+         ["#definevari" 'DEFINE]
+         [(~: (~+ numeric) (~? (~: #\. (~* numeric))))
+          (token-NUM (string->number lexeme))]))
+ 
+(define parse
+  (parser [start E] [end EOF]
+          [tokens value-tokens op-tokens]
+          [error void]
+          [precs (left == <> < > <= >=) (left - +) (left * /) (left NEG)]
+          [grammar (E [(NUM) $1]
+                      [(E == E) (equal? $1 $3)]
+                      [(E <> E) (not(eq? $1 $3))]
+                      [(E < E) (< $1 $3)]
+                      [(E > E) (> $1 $3)]
+                      [(E <= E) (<= $1 $3)]
+                      [(E >= E) (>= $1 $3)]
+                      [(E + E) (+ $1 $3)]
+                      [(E - E) (- $1 $3)]
+                      [(E * E) (* $1 $3)]
+                      [(E / E) (/ $1 $3)]
+                      [(- E) (prec NEG) (- $2)]
+                      [(OPEN E CLOSE) $2]
+                      [(IF E THEN E ENDIF) (if(eq? #t $2) $4 '())]
+                      [(IF E THEN E ELSEIF E ENDIF) (if(eq? #t $2) $4 $6)]
+                      [(DEFINE VAR TYPE) ]
+                   )]))
+
+(define (eval expr)
+  (define i (open-input-string expr))
+  (displayln (parse (lambda() (lex i)))
+             )
+  )
+ 
+(define (uofl)
+   (display "UofL>")                 ; print a prompt
+   (let ((expr (read-line)))              ; read an expression, save it in expr
+      (cond ((equal? expr "exit")        ; user asked to stop?
+             (display "exiting")
+             (newline))
+            (else
+             (eval expr)
+             (uofl)))))
+
+
+
+
+
+(define (math-eval expr)
+  (define i (open-input-string expr))
+  ((parse (lambda() (lex i)))))
+
+(provide math-eval)
+ 

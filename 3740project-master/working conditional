@@ -1,0 +1,23 @@
+#lang racket
+(define (uoflselect)
+   (display "UofL>")                 ; print a prompt
+   (let ((expr (read)))              ; read an expression, save it in expr
+      (cond ((eq? expr 'exit)        ; user asked to stop?
+             (display "exiting")
+             (newline))
+            (else
+             (write (select expr))
+             (newline)
+             (uoflselect)))))
+
+(define (select expr)
+
+(let ((op (car expr));first element of the list that is in expression
+      (val1 (car expr))
+      (val2 (cadr expr))
+      (val3 (caddr expr))
+      (val4 (cadddr expr)))
+
+(cond
+  [(eq? op 'if) (display val1) (display val2) (display val3) (display val4)(newline)(display(eq? val2 val4))(newline)]
+  [(eq? op 'else) (display val1)(display val2)(display val3)(display val4)(newline)(display (eq? val2 val4))])))

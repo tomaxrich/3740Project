@@ -1,0 +1,1 @@
+("6.12" ("8ad4ddd00be71e785b67bca819973617b43c24b6" . "dabbdf5cb9edf33d4e5341c565373e6b07ccd8e4") (collects #"errortrace" #"errortrace-key.rkt") (collects #"parser-tools" #"lex-sre.rkt") (collects #"parser-tools" #"lex.rkt") (collects #"parser-tools" #"yacc.rkt") (collects #"racket" #"main.rkt") (collects #"racket" #"runtime-config.rkt"))
